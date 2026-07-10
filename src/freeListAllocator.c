@@ -17,7 +17,7 @@ bool initFreeList(FreeList *freeList) {
 
     freeList -> nextFreeBlock.ptr = freeList -> basePtr;
     freeList -> nextFreeBlock.blockSize = MEMORY_REGION_SIZE;
-    freeList -> nextFreeBlock.nextBlock = (Block*) NULL; 
+    freeList -> nextFreeBlock.nextFreeBlock = (Block*) NULL; 
     
     return true;
 }
@@ -43,7 +43,7 @@ static bool validateFreeListInit(FreeList *freeList) {
         return false;
     }
 
-    if (freeList -> nextFreeBlock.nextBlock != (Block*) NULL) {
+    if (freeList -> nextFreeBlock.nextFreeBlock != (Block*) NULL) {
         fprintf(stderr, "Error: Failed to validate free list's initialsiation as nextfreeBlock.nextBlock != (Block*) NULL");
         return false;
     }
@@ -66,31 +66,9 @@ static bool validateFreeList(FreeList *freeList) {
 }
 
 /*
- * Careful when using this function; ensure to not pass a blockSize of 0
- * to this function. Reinforce that ptr and nextBlock are valid pointers.
+ * Careful when using this function; check if allocatedAmount exceeds
+ * the maximum available memory and/or allocated amount is 0.
  */
-static Block makeBlock(size_t blockSize, void *ptr, Block *nextBlock) {
-    if (blockSize == 0) {
-        fprintf(stderr, "Error: blockSize was 0 when makeBlock was called.\n");
-    }
-    
-    if (ptr == NULL) {
-        fprintf(stderr, "Error: ptr was NULL when makeBlock was called.\n");
-    }
-
-    if (nextBlock == (Block*) NULL || nextBlock == NULL) {
-        frintf(stderr, "Error: nextBlock was NULL when makeBlock was called.\n");
-    }
-    
-    Block block;
-    
-    block.blockSize = blockSize;
-    block.ptr = ptr;
-    block.nextBlock = nextBlock;
-    
-    return block;
-}
-
 static MetaData makeMetaData(size_t allocatedAmount) {
     if (allocatedAmount == 0) {
         fprintf(stderr, "Error: allocatedAmount should not be 0 when makig metaData.\n");
@@ -105,6 +83,42 @@ static MetaData makeMetaData(size_t allocatedAmount) {
     data.allocatedAmount = allocatedAmount;
 
     return data;
+}
+
+/*
+ * Careful when using this function; ensure to not pass a blockSize of 0
+ * to this function. Reinforce that ptr and nextBlock are valid pointers.
+ */
+static Block makeBlock(MetaData metaData, size_t blockSize, void *ptr, Block *nextFreeBlock) {
+    if (blockSize == 0) {
+        fprintf(stderr, "Error: blockSize was 0 when makeBlock was called.\n");
+    }
+    
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: ptr was NULL when makeBlock was called.\n");
+    }
+
+    if (nextFreeBlock == (Block*) NULL || nextFreeBlock == NULL) {
+        fprintf(stderr, "Error: nextBlock was NULL when makeBlock was called.\n");
+    }
+    
+    Block block;
+    
+    block.metaData = metaData;
+    block.blockSize = blockSize;
+    block.ptr = ptr;
+    block.nextFreeBlock = nextFreeBlock;
+    
+    return block;
+}
+
+/*
+ * Use this to update the FreeList's nextFreeBlock field.
+ */
+static Block findNextFreeBlock(FreeList *freeList) {
+    Block freeBlock;
+    
+
 }
 
 
