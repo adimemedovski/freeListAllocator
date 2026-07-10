@@ -70,14 +70,58 @@ static bool validateFreeList(FreeList *freeList) {
  * to this function. Reinforce that ptr and nextBlock are valid pointers.
  */
 static Block makeBlock(size_t blockSize, void *ptr, Block *nextBlock) {
-    Block block;
+    if (blockSize == 0) {
+        fprintf(stderr, "Error: blockSize was 0 when makeBlock was called.\n");
+    }
+    
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: ptr was NULL when makeBlock was called.\n");
+    }
 
+    if (nextBlock == (Block*) NULL || nextBlock == NULL) {
+        frintf(stderr, "Error: nextBlock was NULL when makeBlock was called.\n");
+    }
+    
+    Block block;
+    
     block.blockSize = blockSize;
     block.ptr = ptr;
     block.nextBlock = nextBlock;
     
     return block;
 }
+
+static MetaData makeMetaData(size_t allocatedAmount) {
+    if (allocatedAmount == 0) {
+        fprintf(stderr, "Error: allocatedAmount should not be 0 when makig metaData.\n");
+    }
+
+    if (allocatedAmount > MEMORY_REGION_SIZE) {
+        fprintf(stderr, "Error: Allocated amount should not exceed memory region size.\n");
+    }
+
+    MetaData data;
+
+    data.allocatedAmount = allocatedAmount;
+
+    return data;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
