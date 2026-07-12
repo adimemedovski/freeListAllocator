@@ -162,8 +162,8 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its paramters failed.\n");
         return NULL;
     }
-   
-        
+
+
     FreeBlock *freeBlock = findFreeBlock(freeList, blockSize + alignment + sizeof(MetaData));
     if (freeBlock == (FreeBlock*) NULL) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as findFreeBlock failed to find a free block.\n");
@@ -171,17 +171,27 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     }
 
     char *ptr = (char*) freeBlock -> ptr;
-   
+
+
     int metaDataAlignmentPadding = getAlignmentPadding(ptr, _Alignof(MetaData)); 
+    MetaData metaData = makeMetaData(blockSize, metaDataAlignmentPadding);
+    char *ptrMetaData = (char*) &metaData; 
     if (metaDataAlignmentPadding == -1) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as metaDataAlignmentPadding is -1.\n");
         return NULL;
-    } else {
-        ptr += metaDataAlignmentPadding;
-    }
+    } 
+    ptrMetaData += (size_t) ptr; // storing meta data at start of freeBlock. 
+    ptr += metaDataAlignmentPadding; // incrementing ptr to end of metaData allocation.
 
+    int ptrAlignmentPadding = getAlignmentPadding(ptr, alignment);
+    if (ptrAlignmentPadding == -1) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as alignment padding of ptr is invalid.\n");
+        return NULL;
+    } 
+    metaData.padding += ptrAlignmentPadding; 
+    ptr += ptrAlignmentPadding; 
 
-    //MetaDeta metaData = makeMetaData(blockSize, );
+    return ptr;
 }
 
 
