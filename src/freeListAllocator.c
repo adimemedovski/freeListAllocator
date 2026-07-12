@@ -128,13 +128,33 @@ static int getAlignmentPadding(char *ptr, size_t alignment) {
     return alignment - (address % alignment);
 }
 
-static MetaData *makeMetaData(size_t allocatedMemory, size_t padding) {
+static MetaData makeMetaData(size_t allocatedMemory, size_t padding) {
     MetaData metaData;
 
     metaData.allocatedMemory = allocatedMemory;
     metaData.padding = padding;
 
-    return &metaData;
+    return metaData;
+}
+
+/*
+ * ptr is what was returned to the user who called freeListAlloc.
+ */
+static MetaData *retrieveMetaData(char *ptr) {
+    if (ptr == (char*) NULL) {
+        fprintf(stderr, "Error: Failed to retrieve meta data as ptr == NULL.\n");
+        return (MetaData*) NULL;
+    }
+   
+    MetaData *metaData;
+
+    ptr -= sizeof(MetaData);
+    
+    size_t *ptrTwo = (size_t*) ptr;
+    metaData -> allocatedMemory = ptrTwo[0];
+    metaData -> padding = ptrTwo[1];
+    
+    return metaData;
 }
 
 void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
@@ -161,7 +181,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     }
 
 
-    MetaDeta metaData = makeMetaData(blockSize, );
+    //MetaDeta metaData = makeMetaData(blockSize, );
 }
 
 
