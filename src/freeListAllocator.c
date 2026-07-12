@@ -3,9 +3,7 @@
 #include <stddef.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "freeListAllocator.h"
-
-bool initFreeList(FreeList *freeList) {
+#include "freeListAllocator.h" bool initFreeList(FreeList *freeList) {
     freeList -> ptrToVirtualAddressSpace = (void*) mmap(NULL, MEMORY_REGION_SIZE,
             PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
             -1, 0);
@@ -66,6 +64,72 @@ static bool validateFreeList(FreeList *freeList) {
     }
 
     return true;
+}
+
+static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
+    if (!validateFreeList(freeList)) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as validation of free list failed.\n");
+        return false;
+    }
+
+    if (blockSize == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc due to invalid block size.\n");
+        return false;
+    }
+
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc due to invalid alignment value.\n");
+        return false;
+    }
+
+    return false;
+}
+
+static FreeBlock *findFreeBlock(FreeList *freeList, blockSizeNeeded) {
+    if (freeList -> head.nextFreeBlock == (FreeBlock*) NULL) {
+        return &freeList -> head;
+    }
+
+    FreeBlock *current = freeList -> head;
+    
+    while (current -> nextFreeBlock != NULL) {
+        if (current -> blockSize <= blockSizeNeeded) {
+            return current;
+        } 
+    }
+
+    return (FreeBlock*) NULL;
+}
+
+static int getAlignmentPadding(FreeList *freeList, size_t alignment) {
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Failed to get alignment padding due to division by zero error - alignment cannot be 0.\n");
+        return -1;
+    } 
+
+    if (!validateFreeList(freeList)) {
+        fprintf(stderr, "Error: Failed to get alignment padding due to freeList failing validation check.\n");
+        return -1;
+    }
+
+
+}
+
+
+
+
+void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
+    if (!validateParamsOfFreeListAlloc(freeList, blockSize, alignment)) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its paramters failed.\n");
+        return NULL;
+    }
+    
+    FreeBlock *freeBlock = findFreeBlock(freeList, blockSize + alignment + sizeof(MetaData));
+    if (freeBlock == (FreeBlock*) NULL) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as findFreeBlock failed to find a free block.\n");
+        return NULL;
+    }
+
 }
 
 

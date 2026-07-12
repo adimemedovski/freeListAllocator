@@ -25,4 +25,6 @@ typedef struct {
 
 bool initFreeList(FreeList *freeList);
 
+void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment);
+
 #endif
