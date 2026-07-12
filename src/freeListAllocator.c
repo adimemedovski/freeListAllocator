@@ -87,6 +87,9 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
     return false;
 }
 
+/*
+ * What will blockSizeNeeded be consisting of???
+ */
 static FreeBlock *findFreeBlock(FreeList *freeList, size_t blockSizeNeeded) {
     if (freeList -> head.nextFreeBlock == (FreeBlock*) NULL) {
         return &freeList -> head;
@@ -105,21 +108,60 @@ static FreeBlock *findFreeBlock(FreeList *freeList, size_t blockSizeNeeded) {
     return (FreeBlock*) NULL;
 }
 
+static int getAlignmentPadding(char *ptr, size_t alignment) {
+    if (ptr == (char*) NULL) {
+        fprintf(stderr, "Error: Cannot get alignment padding as ptr is invalid.\n");
+        return -1;
+    } 
+    
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Cannot get alignment padding as alignment cannot be 0.\n");
+        return -1;
+    }
+
+    if ((size_t) ptr % alignment == 0) {
+        return 0;
+    }
+
+    size_t address = (size_t) ptr;
+    
+    return alignment - (address % alignment);
+}
+
+static MetaData *makeMetaData(size_t allocatedMemory, size_t padding) {
+    MetaData metaData;
+
+    metaData.allocatedMemory = allocatedMemory;
+    metaData.padding = padding;
+
+    return &metaData;
+}
 
 void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     if (!validateParamsOfFreeListAlloc(freeList, blockSize, alignment)) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its paramters failed.\n");
         return NULL;
     }
-    
+   
+        
     FreeBlock *freeBlock = findFreeBlock(freeList, blockSize + alignment + sizeof(MetaData));
     if (freeBlock == (FreeBlock*) NULL) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as findFreeBlock failed to find a free block.\n");
         return NULL;
     }
 
-     
+    char *ptr = (char*) freeBlock -> ptr;
+   
+    int metaDataAlignmentPadding = getAlignmentPadding(ptr, _Alignof(MetaData)); 
+    if (metaDataAlignmentPadding == -1) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as metaDataAlignmentPadding is -1.\n");
+        return NULL;
+    } else {
+        ptr += metaDataAlignmentPadding;
+    }
 
+
+    MetaDeta metaData = makeMetaData(blockSize, );
 }
 
 
