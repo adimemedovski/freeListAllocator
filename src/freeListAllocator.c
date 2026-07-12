@@ -84,7 +84,7 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
         return false;
     }
 
-    return false;
+    return true;
 }
 
 /*
