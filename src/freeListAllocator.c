@@ -86,6 +86,15 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
 
     return true;
 }
+static FreeBlock makeFreeBlock(void *ptr, size_t blockSize, FreeBlock *nextFreeBlock) {
+    FreeBlock freeBlock;
+
+    freeBlock.ptr = ptr;
+    freeBlock.blockSize = blockSize;
+    freeBlock.nextFreeBlock = nextFreeBlock;
+
+    return freeBlock;
+}
 
 /*
  * What will blockSizeNeeded be consisting of???
@@ -107,6 +116,8 @@ static FreeBlock *findFreeBlock(FreeList *freeList, size_t blockSizeNeeded) {
 
     return (FreeBlock*) NULL;
 }
+
+
 
 static int getAlignmentPadding(char *ptr, size_t alignment) {
     if (ptr == (char*) NULL) {
@@ -190,7 +201,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     } 
     metaData.padding += ptrAlignmentPadding; 
     ptr += ptrAlignmentPadding; 
-
+    
     return ptr;
 }
 
