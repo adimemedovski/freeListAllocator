@@ -70,6 +70,20 @@ bool initMemoryManager(MemoryManager *memoryManager) {
     return true;
 }
 
+static bool validateMemoryManager(MemoryManager *memoryManager) {
+    if (memoryManager == NULL || memoryManager == (MemoryManager*) NULL) {
+        fprintf(stderr, "Validation of memory manager failed as memoryManager is NULL.\n");
+        return false;
+    }
+
+    if (memoryManager -> ptrToVirtualAddressSpace == MAP_FAILED || memoryManager -> ptrToVirtualAddressSpace == MAP_FAILED) {
+        fprintf(stderr, "Error: Validation of memory manager failed as ptr to addressSpace is invalid.\n");
+        return false;
+    }
+
+    return true;
+}
+
 static bool validateParamsOfGetPointerAlignmentPadding(void *ptr, size_t alignment) {
     if (ptr == NULL) {
         fprintf(stderr, "Error: Failed to get alignment padding as ptr is of type NULL.\n");
@@ -99,8 +113,32 @@ static int getPointerAlignmentPadding(void *ptr, size_t alignment) {
     return alignment - (address % alignment);
 }
 
-static void *freeListAlloc(MemoryManager *memoryManager, size_t blockSize, size_t alignment) {
+static bool validateParamsOfFreeListAlloc(MemoryManager *memoryManager, size_t blockSize, size_t alignment) {
+    if (memoryManager == NULL || memoryManager == (MemoryManager*) NULL) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as memoryManager is NULL.\n");
+        return false;
+    }
 
+    if (!validateMemoryManager(memoryManager)) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as validation of memoryManager failed.\n");
+        return false;
+    }
+
+    if (blockSize == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as block size has to be greater than 0.\n");
+        return false;
+    }
+
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as alignment is 0 -- divison by zero error.\n");
+        return false;
+    }
+
+    return true;
+}
+
+void *freeListAlloc(MemoryManager *memoryManager, size_t blockSize, size_t alignment) {
+    
 }
 
 
