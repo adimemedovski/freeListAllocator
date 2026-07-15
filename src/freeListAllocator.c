@@ -70,9 +70,38 @@ bool initMemoryManager(MemoryManager *memoryManager) {
     return true;
 }
 
+static bool validateParamsOfGetPointerAlignmentPadding(void *ptr, size_t alignment) {
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: Failed to get alignment padding as ptr is of type NULL.\n");
+        return -1;
+    }
 
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Failed to get alignment padding as alignment is 0 -- division by zero error.\n");
+        return false;
+    }
+    
+    return true;
+}
 
+static int getPointerAlignmentPadding(void *ptr, size_t alignment) {
+    if (!validateParamsOfGetPointerAlignmentPadding(ptr, alignment)) {
+        fprintf(stderr, "Error: Failed to call getPointerAlignmentPadding as validation of params failed.\n");
+        return -1;
+    }
+   
+    size_t address = (size_t) ptr;
+    
+    if (address % alignment == 0) {
+        return 0; 
+    }
 
+    return alignment - (address % alignment);
+}
+
+static void *freeListAlloc(MemoryManager *memoryManager, size_t blockSize, size_t alignment) {
+
+}
 
 
 

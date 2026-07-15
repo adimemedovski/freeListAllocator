@@ -27,5 +27,6 @@ typedef struct {
 
 bool initMemoryManager(MemoryManager *memoryManager);
     
+static void *freeListAlloc(MemoryManager *memoryManager, size_t blockSize, size_t alignment);
 
 #endif
