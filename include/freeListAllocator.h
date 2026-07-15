@@ -20,12 +20,12 @@ typedef struct Block {
 } Block;
  
 typedef struct {
-    Block *headOfUsedBlocks;
-    Block *headOfFreeBlocks;
+    Block headOfUsedBlocks;
+    Block headOfFreeBlocks;
     void *ptrToVirtualAddressSpace;
 } MemoryManager;
 
-bool initMemoryManager(MemoryManager memoryManager);
+bool initMemoryManager(MemoryManager *memoryManager);
     
 
 #endif

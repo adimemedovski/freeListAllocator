@@ -11,9 +11,18 @@ void tearDown(void) {
 
 }
 
+void testInitMemoryManager(void) {
+    MemoryManager memoryManager;
+
+    TEST_ASSERT_TRUE(initMemoryManager(&memoryManager));
+    
+}
+
 
 int main(void) {
     UNITY_BEGIN();
-    
+
+    RUN_TEST(testInitMemoryManager);
+
     return UNITY_END();
 }
