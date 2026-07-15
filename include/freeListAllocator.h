@@ -8,23 +8,24 @@
 static const size_t MEMORY_REGION_SIZE = 4096;
 
 typedef struct {
-    size_t allocatedMemory;
-    size_t padding; 
+    bool isFreeBlock;
+    size_t padding;   
 } MetaData;
 
-typedef struct FreeBlock {
+typedef struct Block {
     void *ptr;
     size_t blockSize;
-    struct FreeBlock *nextFreeBlock;
-} FreeBlock;
-
+    struct Block *nextBlock;
+    MetaData metaData; 
+} Block;
+ 
 typedef struct {
+    Block *headOfUsedBlocks;
+    Block *headOfFreeBlocks;
     void *ptrToVirtualAddressSpace;
-    FreeBlock head;
-} FreeList;
+} MemoryManager;
 
-bool initFreeList(FreeList *freeList);
-
-void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment);
+bool initMemoryManager(MemoryManager memoryManager);
+    
 
 #endif
