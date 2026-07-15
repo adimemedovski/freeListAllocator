@@ -15,7 +15,13 @@ void testInitMemoryManager(void) {
     MemoryManager memoryManager;
 
     TEST_ASSERT_TRUE(initMemoryManager(&memoryManager));
+    TEST_ASSERT_TRUE(memoryManager.ptrToVirtualAddressSpace != NULL); 
+    TEST_ASSERT_TRUE(memoryManager.ptrToVirtualAddressSpace != MAP_FAILED); 
     
+    /*
+     * Clean up.
+     */
+    munmap(memoryManager.ptrToVirtualAddressSpace, MEMORY_REGION_SIZE);
 }
 
 
