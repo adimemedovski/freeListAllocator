@@ -19,9 +19,8 @@
  */
 
 typedef struct {
+    size_t padding;
     size_t allocatedMemory;
-    size_t alignmentPaddingOfPtr;
-    size_t alignmentPaddingOfMetaData;
 } MetaData;
 
 typedef struct Block {
@@ -34,10 +33,5 @@ typedef struct {
     Block *head; 
 } FreeList;
 
-bool initFreeList(FreeList *freeList);
-
-void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment);
-
-bool freeAlloc(FreeList *freeList, void *ptr);
 
 #endif
