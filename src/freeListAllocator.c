@@ -114,7 +114,10 @@ static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size
     head -> next = (Block*) NULL; 
 
     freeList -> head = head;
-} 
+    
+    fprintf(stderr, "head -> blocksize = %zu\n", head -> blockSize);
+}
+
 
 static MetaData *getAlignedMetaData(char* ptrToHead) {
     char *metaDataPtr = ptrToHead + sizeof(Block);  
@@ -128,18 +131,23 @@ static MetaData *getAlignedMetaData(char* ptrToHead) {
     return metaData;
 }
 
-static void *getAlignedPointer(MetaData *metaData, size_t alignment) {
-    char *ptrToReturn = (char*) metaData; 
+/*
+ * We seem to be overwriting the data of metaData. Resolution
+ * needed ASAP.
+ */
+static void *getAlignedPointer(char *metaData, size_t alignment) {
+    char *ptrToReturn = metaData; 
     ptrToReturn += sizeof(MetaData);
     
     size_t ptrToReturnAlignmentPadding = getAlignmentPadding((void*) ptrToReturn, alignment);
     
     ptrToReturn += ptrToReturnAlignmentPadding;
-    char *newMetaDataPtr = (char*) metaData; 
-    newMetaDataPtr += ptrToReturnAlignmentPadding;
-    metaData = (MetaData*) newMetaDataPtr;
-    metaData -> padding += ptrToReturnAlignmentPadding;
+    metaData += ptrToReturnAlignmentPadding; 
+    //metaData -> padding += ptrToReturnAlignmentPadding;
     
+    MetaData *defMetaData = (MetaData*) metaData;
+    defMetaData -> padding += ptrToReturnAlignmentPadding;
+
     return (void*) ptrToReturn;
 }
 
@@ -153,7 +161,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     } 
     
     MetaData *metaData = getAlignedMetaData((char*) freeList -> head);
-    void *ptrToReturn = getAlignedPointer(metaData, alignment);
+    void *ptrToReturn = getAlignedPointer((char*) metaData, alignment);
 
     if (freeList -> head -> next == NULL) {
         handleFreeListNextIsNULL(freeList, (char*) ptrToReturn, blockSize); 
@@ -185,6 +193,7 @@ static bool validateParamsOfFreeAlloc(FreeList *freeList, void *ptr) {
 static size_t determineFreedBlockSize(char* ptrToFreeBlock, MetaData *metaData) {
     char *beginBlock = ptrToFreeBlock;
     char *endBlock = ptrToFreeBlock;
+    fprintf(stderr, "md -> padding = %zu\nallocatedmem = %zu\n", metaData -> padding, metaData -> allocatedMemory); 
     endBlock += metaData -> padding + metaData -> allocatedMemory;
     
     return (size_t) (endBlock - beginBlock);

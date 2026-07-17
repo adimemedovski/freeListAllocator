@@ -55,25 +55,27 @@ void testFreeListAlloc(void) {
 }
 
 void testFreeAlloc(void) {
-    //FreeList freeList;
-    //initFreeList(&freeList);
+    FreeList freeList;
+    initFreeList(&freeList);
 
-    //size_t *ptrOne = (size_t*) freeListAlloc(&freeList, sizeof(size_t) * 2, _Alignof(size_t));
-    //ptrOne[0] = 1;
-    //ptrOne[1] = 2;
+    size_t *ptrOne = (size_t*) freeListAlloc(&freeList, sizeof(size_t) * 2, _Alignof(size_t));
+    ptrOne[0] = 1;
+    ptrOne[1] = 2;
 
-    //size_t *ptrTwo = (size_t*) freeListAlloc(&freeList, sizeof(size_t) * 3, _Alignof(size_t));
-    //ptrTwo[0] = 33;
-    //ptrTwo[1] = 66;
-    //ptrTwo[2] = 99;
+    size_t *ptrTwo = (size_t*) freeListAlloc(&freeList, sizeof(size_t) * 8, _Alignof(size_t));
+    ptrTwo[0] = 33;
+    ptrTwo[1] = 66;
+    ptrTwo[2] = 99;
 
-    //freeAlloc(&freeList, ptrOne);
+    freeAlloc(&freeList, ptrOne);
+  
+    TEST_ASSERT_EQUAL_size_t(32, freeList.head -> blockSize);
     
-    //TEST_ASSERT_EQUAL_size_t(32, freeList.head -> blockSize);
+    freeAlloc(&freeList, ptrTwo);
     
-    //freeAlloc(&freeList, ptrTwo);
-    
-    //TEST_ASSERT_EQUAL_size_t(40, freeList.head -> blockSize);
+    TEST_ASSERT_EQUAL_size_t(40, freeList.head -> blockSize);
+
+    munmap(freeList.memoryBasePtr, MAX_MEMORY_SIZE);
 }
 
 int main(void) {
