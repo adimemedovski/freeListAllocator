@@ -47,7 +47,58 @@ bool initFreeList(FreeList *freeList) {
     return true;
 }
 
+static bool validateFreeList(FreeList *freeList) {
+    if (freeList == NULL || freeList == (FreeList*) NULL) {
+        fprintf(stderr, "Error: Failed to validate free list as freeList is NULL.\n");
+        return false;
+    }
+
+    if (freeList -> memoryBasePtr == NULL) {
+        fprintf(stderr, "Error: Failed to validate free list as memoryBasePtr is NULL.\n");
+        return false;
+    }
+
+    if (freeList -> memoryBasePtr == MAP_FAILED) {
+        fprintf(stderr, "Error: Failed to validate free list as memoryBasePtr is MAP_FAILED.\n");
+        return false;
+    }
+    
+    if (freeList -> head == (Block*) NULL || freeList -> head == NULL) {
+        fprintf(stderr, "Error: Failed to validate free list as head is NULL.\n");
+        return false;
+    }
+
+    return true; 
+}
+
+static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
+    if (!validateFreeList(freeList)) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as validation of params failed.\n");
+        return false;
+    } 
+    
+    if (blockSize == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as block size cannot be zero.\n");
+        return false;
+    }
+
+    if (alignment == 0) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as alignment cannot be zero.\n");
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Need to add alignment features for both Block and ptrToReturn.
+ */
 void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
+    if (!validateParamsOfFreeListAlloc(freeList, blockSize, alignment)) {
+        fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its params failed.\n");
+        return NULL;
+    } 
+
     char *ptrToReturn = (char*) freeList -> head;
     ptrToReturn += sizeof(Block); // Avoids overwriting data in freeList -> head.
     
@@ -65,7 +116,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
         newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
         
         Block *head = (Block*) newHead;
-        head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // producing seg fault error.
+        head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // need to validate this functionality.
         head -> next = (Block*) NULL; 
         
         freeList -> head = head; 
@@ -78,13 +129,33 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     return (void*) ptrToReturn;
 }
 
+/*
+ * We should add a case where we determine whether there is any pointer to be freed at all.
+ */
+static bool validateParamsOfFreeAlloc(FreeList *freeList, void *ptr) {
+    if (!validateFreeList(freeList)) {
+        fprintf(stderr, "Error: Failed to call freeAlloc as validation of freeList failed.\n");
+        return false;
+    }
+
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: Failed to call freeAlloc as ptr is NULL.\n");
+        return false;
+    }
+
+    return true;
+}
+
 bool freeAlloc(FreeList *freeList, void* ptr) {
+    if (!validateParamsOfFreeAlloc(freeList, ptr)) {
+        fprintf(stderr, "Error: Failed to call freeAlloc as validation of its params faileds.\n");
+        return false;
+    } 
+
     char *ptrToMetaData = (char*) ptr;
     ptrToMetaData -= sizeof(MetaData);
     
     MetaData *metaData = (MetaData*) ptrToMetaData;
-    fprintf(stderr, "metaData -> padding = %zu\n", metaData -> padding);
-    fprintf(stderr, "metaData -> allocatedMemory = %zu\n", metaData -> allocatedMemory);
     
     char* ptrToFreeBlock = (char*) metaData;
     ptrToFreeBlock -= metaData -> padding;
@@ -94,7 +165,6 @@ bool freeAlloc(FreeList *freeList, void* ptr) {
     freeBlock -> next = freeList -> head;
     freeList -> head = freeBlock;
     
-    fprintf(stderr, "freeList -> head -> blockSize = %zu\n", freeList -> head -> blockSize);
     return true;
 }
 
