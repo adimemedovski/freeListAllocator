@@ -90,6 +90,22 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
     return true;
 }
 
+        
+static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size_t blockSize) {
+    char* newHead = (char*) freeList -> head;
+    newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
+
+    size_t headPadding = getAlignmentPadding((void*) newHead, _Alignof(Block));
+
+    newHead += headPadding;
+
+    Block *head = (Block*) newHead;
+    head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // need to validate this functionality.
+    head -> next = (Block*) NULL; 
+
+    freeList -> head = head;
+} 
+
 /*
  * Refactoring of this function is needed.
  *
@@ -110,33 +126,18 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     MetaData *metaData = (MetaData*) metaDataPtr;
 
     ptrToReturn += metaData -> padding + sizeof(MetaData);
-    
     size_t ptrToReturnPadding = getAlignmentPadding((void*) ptrToReturn, alignment);
-    
     ptrToReturn += ptrToReturnPadding;
 
     metaData -> allocatedMemory = blockSize;
 
     if (freeList -> head -> next == (Block*) NULL) {
-        char* newHead = (char*) freeList -> head;
-        newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
-        
-        size_t headPadding = getAlignmentPadding((void*) newHead, _Alignof(Block));
-      
-        newHead += headPadding;
-
-        Block *head = (Block*) newHead;
-        head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // need to validate this functionality.
-        head -> next = (Block*) NULL; 
-        
-        freeList -> head = head; 
-        
+        handleFreeListNextIsNULL(freeList, ptrToReturn, blockSize); 
         return (void*) ptrToReturn;
     }
    
     freeList -> head = freeList -> head -> next;
      
-
     return (void*) ptrToReturn;
 }
 
