@@ -106,9 +106,34 @@ static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size
     freeList -> head = head;
 } 
 
+static MetaData *getAlignedMetaData(FreeList *freeList, char* ptrToHead) {
+    char *metaDataPtr = ptrToHead + sizeof(Block); // prevents overwriting data in freeList -> head.  
+    size_t metaDataAlignmentPadding = getAlignmentPadding((void*) metaDataPtr, _Alignof(MetaData));    
+    
+    metaDataPtr += metaDataAlignmentPadding;
+    
+    MetaData *metaData = (MetaData*) metaDataPtr;
+    metaData -> padding = metaDataAlignmentPadding;
+    
+    return metaData;
+}
+
+static void *getAlignedPointer(MetaData *metaData, size_t alignment) {
+    char *ptrToReturn = (char*) metaData; 
+    ptrToReturn += sizeof(MetaData);
+    
+    size_t ptrToReturnAlignmentPadding = getAlignmentPadding((void*) ptrToReturn, alignment);
+    
+    ptrToReturn += ptrToReturnAlignmentPadding;
+    char *newMetaDataPtr = (char*) metaData; 
+    newMetaDataPtr += ptrToReturnAlignmentPadding;
+    metaData = (MetaData*) newMetaDataPtr;
+    metaData -> padding += ptrToReturnAlignmentPadding;
+    
+    return (void*) ptrToReturn;
+}
+
 /*
- * Refactoring of this function is needed.
- *
  * Need to add overflow checks.
  */
 void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
@@ -116,23 +141,12 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its params failed.\n");
         return NULL;
     } 
-
-    char *ptrToReturn = (char*) freeList -> head;
-    ptrToReturn += sizeof(Block); // Avoids overwriting data in freeList -> head.
     
-    char *metaDataPtr = (char*) ptrToReturn;
-    size_t metaDataPadding = getAlignmentPadding((void*) metaDataPtr, _Alignof(MetaData)); 
-    metaDataPtr += metaDataPadding;
-    MetaData *metaData = (MetaData*) metaDataPtr;
-
-    ptrToReturn += metaData -> padding + sizeof(MetaData);
-    size_t ptrToReturnPadding = getAlignmentPadding((void*) ptrToReturn, alignment);
-    ptrToReturn += ptrToReturnPadding;
-
-    metaData -> allocatedMemory = blockSize;
+    MetaData *metaData = getAlignedMetaData(freeList, (char*) freeList -> head);
+    void *ptrToReturn = getAlignedPointer(metaData, alignment);
 
     if (freeList -> head -> next == (Block*) NULL) {
-        handleFreeListNextIsNULL(freeList, ptrToReturn, blockSize); 
+        handleFreeListNextIsNULL(freeList, (char*) ptrToReturn, blockSize); 
         return (void*) ptrToReturn;
     }
    
