@@ -90,24 +90,34 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
     return true;
 }
 
+/*
+ * Only call with handleFreeListNextIsNULL.
+ */
+static size_t determineNewBlockSize(FreeList *freeList, char* ptrToReturn, size_t blockSize) {
+    char *beginBlock = ptrToReturn;
+    beginBlock += blockSize; 
+    char *endBlock = (char*) freeList -> memoryBasePtr + MAX_MEMORY_SIZE;
+    
+    return (size_t) endBlock - (size_t) beginBlock;
+}
         
 static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size_t blockSize) {
-    char* newHead = (char*) freeList -> head;
-    newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
-
+    char *newHead = (char*) ptrToReturn;
+    newHead += blockSize;
+    
     size_t headPadding = getAlignmentPadding((void*) newHead, _Alignof(Block));
 
     newHead += headPadding;
 
     Block *head = (Block*) newHead;
-    head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // need to validate this functionality.
+    head -> blockSize = determineNewBlockSize(freeList, (char*) ptrToReturn, blockSize); 
     head -> next = (Block*) NULL; 
 
     freeList -> head = head;
 } 
 
-static MetaData *getAlignedMetaData(FreeList *freeList, char* ptrToHead) {
-    char *metaDataPtr = ptrToHead + sizeof(Block); // prevents overwriting data in freeList -> head.  
+static MetaData *getAlignedMetaData(char* ptrToHead) {
+    char *metaDataPtr = ptrToHead + sizeof(Block);  
     size_t metaDataAlignmentPadding = getAlignmentPadding((void*) metaDataPtr, _Alignof(MetaData));    
     
     metaDataPtr += metaDataAlignmentPadding;
@@ -142,10 +152,10 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
         return NULL;
     } 
     
-    MetaData *metaData = getAlignedMetaData(freeList, (char*) freeList -> head);
+    MetaData *metaData = getAlignedMetaData((char*) freeList -> head);
     void *ptrToReturn = getAlignedPointer(metaData, alignment);
 
-    if (freeList -> head -> next == (Block*) NULL) {
+    if (freeList -> head -> next == NULL) {
         handleFreeListNextIsNULL(freeList, (char*) ptrToReturn, blockSize); 
         return (void*) ptrToReturn;
     }
@@ -193,15 +203,5 @@ bool freeAlloc(FreeList *freeList, void* ptr) {
     
     return true;
 }
-
-
-
-
-
-
-
-
-
-
 
 
