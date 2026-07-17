@@ -68,6 +68,12 @@ void testFreeAlloc(void) {
     ptrTwo[2] = 99;
 
     freeAlloc(&freeList, ptrOne);
+    
+    TEST_ASSERT_EQUAL_size_t(32, freeList.head -> blockSize);
+    
+    freeAlloc(&freeList, ptrTwo);
+    
+    TEST_ASSERT_EQUAL_size_t(40, freeList.head -> blockSize);
 }
 
 int main(void) {
@@ -75,6 +81,7 @@ int main(void) {
 
     RUN_TEST(testInitFreeList);
     RUN_TEST(testFreeListAlloc);
+    RUN_TEST(testFreeAlloc);
 
     return UNITY_END();
 }
