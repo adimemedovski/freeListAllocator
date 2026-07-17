@@ -82,8 +82,17 @@ bool freeAlloc(FreeList *freeList, void* ptr) {
     ptrToMetaData -= sizeof(MetaData);
     
     MetaData *metaData = (MetaData*) ptrToMetaData;
-    
 
+    char* ptrToFreeBlock = (char*) metaData;
+    ptrToFreeBlock -= metaData -> padding;
+    
+    Block *freeBlock = (Block*) ptrToFreeBlock;
+    freeBlock -> blockSize = metaData -> padding + sizeof(MetaData) + metaData -> allocatedMemory;
+    
+    freeBlock -> next = freeList -> head;
+    freeList -> head = freeBlock;
+    
+    return true;
 }
 
 
