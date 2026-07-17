@@ -182,26 +182,35 @@ static bool validateParamsOfFreeAlloc(FreeList *freeList, void *ptr) {
     return true;
 }
 
-bool freeAlloc(FreeList *freeList, void* ptr) {
-    if (!validateParamsOfFreeAlloc(freeList, ptr)) {
-        fprintf(stderr, "Error: Failed to call freeAlloc as validation of its params faileds.\n");
-        return false;
-    } 
+static size_t determineFreedBlockSize(char* ptrToFreeBlock, MetaData *metaData) {
+    char *beginBlock = ptrToFreeBlock;
+    char *endBlock = ptrToFreeBlock;
+    endBlock += metaData -> padding + metaData -> allocatedMemory;
+    
+    return (size_t) (endBlock - beginBlock);
+}
 
-    char *ptrToMetaData = (char*) ptr;
-    ptrToMetaData -= sizeof(MetaData);
+bool freeAlloc(FreeList *freeList, void *ptr) {
+    if (!validateParamsOfFreeAlloc(freeList, ptr)) {
+        fprintf(stderr, "Error: Failed to call freeAlloc as validation of its params failed.\n");
+        return false;
+    }
+
+    char *metaDataPtr = (char*) ptr;
+    metaDataPtr -= sizeof(MetaData);
+    MetaData *metaData = (MetaData*) metaDataPtr;
     
-    MetaData *metaData = (MetaData*) ptrToMetaData;
-    
-    char* ptrToFreeBlock = (char*) metaData;
+    char* ptrToFreeBlock = metaDataPtr;
     ptrToFreeBlock -= metaData -> padding;
     
     Block *freeBlock = (Block*) ptrToFreeBlock;
-    freeBlock -> blockSize = metaData -> padding + sizeof(MetaData) + metaData -> allocatedMemory;
+    freeBlock -> blockSize = determineFreedBlockSize(ptrToFreeBlock, metaData);
     freeBlock -> next = freeList -> head;
     freeList -> head = freeBlock;
     
     return true;
 }
+
+
 
 
