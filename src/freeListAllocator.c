@@ -51,9 +51,10 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     char *ptrToReturn = (char*) freeList -> head;
     ptrToReturn += sizeof(Block); // Avoids overwriting data in freeList -> head.
     
-    MetaData *metaData = (MetaData*) ptrToReturn;
-    metaData -> padding = getAlignmentPadding((void*) metaData, _Alignof(MetaData));
-    metaData += metaData -> padding;
+    char *metaDataPtr = (char*) ptrToReturn;
+    size_t metaDataPadding = getAlignmentPadding((void*) metaDataPtr, _Alignof(MetaData)); 
+    metaDataPtr += metaDataPadding;
+    MetaData *metaData = (MetaData*) metaDataPtr;
 
     ptrToReturn += metaData -> padding + sizeof(MetaData);
     
@@ -61,7 +62,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     
     if (freeList -> head -> next == (Block*) NULL) {
         char* newHead = (char*) freeList -> head;
-        newHead += (char) ptrToReturn + blockSize;
+        newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
         
         Block *head = (Block*) newHead;
         head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // producing seg fault error.
@@ -96,6 +97,7 @@ bool freeAlloc(FreeList *freeList, void* ptr) {
     fprintf(stderr, "freeList -> head -> blockSize = %zu\n", freeList -> head -> blockSize);
     return true;
 }
+
 
 
 
