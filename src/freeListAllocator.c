@@ -91,7 +91,9 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
 }
 
 /*
- * Need to add alignment features for both Block and ptrToReturn.
+ * Refactoring of this function is needed.
+ *
+ * Need to add overflow checks.
  */
 void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     if (!validateParamsOfFreeListAlloc(freeList, blockSize, alignment)) {
@@ -109,12 +111,20 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
 
     ptrToReturn += metaData -> padding + sizeof(MetaData);
     
-    metaData -> allocatedMemory = blockSize;
+    size_t ptrToReturnPadding = getAlignmentPadding((void*) ptrToReturn, alignment);
     
+    ptrToReturn += ptrToReturnPadding;
+
+    metaData -> allocatedMemory = blockSize;
+
     if (freeList -> head -> next == (Block*) NULL) {
         char* newHead = (char*) freeList -> head;
         newHead += (char) ptrToReturn + blockSize; // Seg fault when I used intptr_t instead of char?
         
+        size_t headPadding = getAlignmentPadding((void*) newHead, _Alignof(Block));
+      
+        newHead += headPadding;
+
         Block *head = (Block*) newHead;
         head -> blockSize = ((intptr_t) freeList -> memoryBasePtr) + MAX_MEMORY_SIZE - ((intptr_t) newHead); // need to validate this functionality.
         head -> next = (Block*) NULL; 
@@ -125,7 +135,8 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
     }
    
     freeList -> head = freeList -> head -> next;
-   
+     
+
     return (void*) ptrToReturn;
 }
 
