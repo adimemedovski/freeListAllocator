@@ -93,12 +93,12 @@ static bool validateParamsOfFreeListAlloc(FreeList *freeList, size_t blockSize, 
 /*
  * Only call with handleFreeListNextIsNULL.
  */
-static size_t determineNewBlockSize(FreeList *freeList, char* ptrToReturn, size_t blockSize) {
-    char *beginBlock = ptrToReturn;
-    beginBlock += blockSize; 
+static size_t determineNewBlockSize(FreeList *freeList, char* newHead, size_t blockSize) {
+    char *beginBlock = newHead;
+    
     char *endBlock = (char*) freeList -> memoryBasePtr + MAX_MEMORY_SIZE;
     
-    return (size_t) endBlock - (size_t) beginBlock;
+    return (size_t) (endBlock - beginBlock);
 }
         
 static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size_t blockSize) {
@@ -110,7 +110,7 @@ static void handleFreeListNextIsNULL(FreeList *freeList, void *ptrToReturn, size
     newHead += headPadding;
 
     Block *head = (Block*) newHead;
-    head -> blockSize = determineNewBlockSize(freeList, (char*) ptrToReturn, blockSize); 
+    head -> blockSize = determineNewBlockSize(freeList, newHead, blockSize); 
     head -> next = (Block*) NULL; 
 
     freeList -> head = head;
