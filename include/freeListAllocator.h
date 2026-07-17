@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define MAX_MEMORY_SIZE 4096
+#define MAX_MEMORY_SIZE ((size_t) 4096)
 
 /*
  * When freeing memory, the total block size will be:
@@ -24,7 +24,7 @@ typedef struct {
 } MetaData;
 
 typedef struct Block {
-    struct Block *nextBlock;
+    struct Block *next;
     size_t blockSize;
 } Block;
 
@@ -33,5 +33,10 @@ typedef struct {
     Block *head; 
 } FreeList;
 
+bool initFreeList(FreeList *freeList);
+
+void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment);
+
+bool freeAlloc(FreeList *freeList, void* ptr);
 
 #endif
