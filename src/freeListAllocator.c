@@ -159,7 +159,7 @@ void *freeListAlloc(FreeList *freeList, size_t blockSize, size_t alignment) {
         fprintf(stderr, "Error: Failed to call freeListAlloc as validation of its params failed.\n");
         return NULL;
     } 
-    
+
     MetaData *metaData = getAlignedMetaData((char*) freeList -> head);
     void *ptrToReturn = getAlignedPointer((char*) metaData, alignment);
 
@@ -195,7 +195,7 @@ static size_t determineFreedBlockSize(char* ptrToFreeBlock, MetaData *metaData) 
     char *endBlock = ptrToFreeBlock;
     fprintf(stderr, "md -> padding = %zu\nallocatedmem = %zu\n", metaData -> padding, metaData -> allocatedMemory); 
     endBlock += metaData -> padding + metaData -> allocatedMemory;
-    
+
     return (size_t) (endBlock - beginBlock);
 }
 
